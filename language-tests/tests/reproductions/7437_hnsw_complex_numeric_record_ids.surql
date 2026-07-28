@@ -17,6 +17,30 @@ match = "string::contains(<string>$result, 'hnsw_complex')"
 
 [[test.results]]
 value = "[{ marker: 'array-decimal' }, { marker: 'array-float' }, { marker: 'object-decimal' }, { marker: 'object-float' }]"
+
+[[test.results]]
+value = "NONE"
+
+[[test.results]]
+value = "NONE"
+
+[[test.results]]
+value = "[{ embeddings: [1f, 0f], id: hnsw_array_id:[1, 'one'] }]"
+
+[[test.results]]
+value = "[{ embeddings: [0.9f, 0.1f], id: hnsw_array_id:[2, 'two'] }]"
+
+[[test.results]]
+value = "[{ embeddings: [0.8f, 0.2f], id: hnsw_array_id:[3, 'three'] }]"
+
+[[test.results]]
+value = "NONE"
+
+[[test.results]]
+match = "string::contains(<string>$result, 'embeddings_hnsw')"
+
+[[test.results]]
+value = "[{ id: hnsw_array_id:[1, 'one'] }, { id: hnsw_array_id:[2, 'two'] }, { id: hnsw_array_id:[3, 'three'] }]"
 */
 
 DEFINE INDEX hnsw_complex ON pts FIELDS point HNSW DIMENSION 1 DIST EUCLIDEAN TYPE F32;
@@ -28,3 +52,24 @@ INSERT INTO pts [
 ];
 EXPLAIN SELECT marker FROM pts WHERE point <|4,40|> [25f] ORDER BY marker;
 SELECT marker FROM pts WHERE point <|4,40|> [25f] ORDER BY marker;
+
+DEFINE TABLE hnsw_array_id SCHEMALESS;
+DEFINE FIELD embeddings ON hnsw_array_id TYPE array<float>;
+
+CREATE hnsw_array_id:[1, 'one'] SET embeddings = [1.0f, 0.0f];
+CREATE hnsw_array_id:[2, 'two'] SET embeddings = [0.9f, 0.1f];
+CREATE hnsw_array_id:[3, 'three'] SET embeddings = [0.8f, 0.2f];
+
+DEFINE INDEX embeddings_hnsw
+	ON hnsw_array_id
+	FIELDS embeddings
+	HNSW DIMENSION 2 DIST COSINE TYPE F32;
+
+EXPLAIN SELECT id
+	FROM hnsw_array_id
+	WHERE embeddings <|3,40|> [1.0f, 0.0f]
+	ORDER BY id;
+SELECT id
+	FROM hnsw_array_id
+	WHERE embeddings <|3,40|> [1.0f, 0.0f]
+	ORDER BY id;
